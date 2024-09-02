@@ -1,4 +1,4 @@
-import requests, csv, ssl, OpenSSL.crypto
+import requests, csv, ssl, OpenSSL.crypto, json
 from io import StringIO
 from datetime import datetime
 
@@ -23,7 +23,7 @@ def get_cert():
 
     # Print the total number of certificates loaded
     certs = context.get_ca_certs(binary_form=True)
-    print(f"Total number of certificates loaded: {len(certs)}")
+    print(f"Total number of certificates loaded: {len(certs)}\n")
 
     for cert_dict in certs:
         try:
@@ -33,24 +33,26 @@ def get_cert():
             expiration_date = x509.get_notAfter().decode('utf-8')  # Get the expiration date
             expiration_date = datetime.strptime(expiration_date, '%Y%m%d%H%M%SZ').strftime('%Y-%m-%d')  # Convert to yyyy-mm-dd format
             if sha1_hash not in trusted_ca:
-                untrusted_ca.append((issuer, sha1_hash, expiration_date))
+                untrusted_ca.append({"Issuer": issuer, "SHA1Hash": sha1_hash, "ExpirationDate": expiration_date})
             elif trusted_ca[sha1_hash]['Microsoft Status'] == 'Disabled':
-                disabled_certificates.append((issuer, sha1_hash, expiration_date))
+                disabled_certificates.append({"Issuer": issuer, "SHA1Hash": sha1_hash, "ExpirationDate": expiration_date})
         except Exception as e:
             print(f"Error processing a certificate: {e}")
 
     # Filter out None elements before sorting
-    untrusted_ca = [ca for ca in untrusted_ca if ca is not None and all(ca)]
-    disabled_certificates = [ca for ca in disabled_certificates if ca is not None and all(ca)]
+    untrusted_ca = [ca for ca in untrusted_ca if ca is not None and all(ca.values())]
+    disabled_certificates = [ca for ca in disabled_certificates if ca is not None and all(ca.values())]
 
-    # Display untrusted CAs
+    # Sort the lists of dictionaries by Issuer
+    untrusted_ca.sort(key=lambda x: x['Issuer'])
+    disabled_certificates.sort(key=lambda x: x['Issuer'])
+
+    # Display untrusted CAs in JSON format
     print("Certificates in the system but not present in the CSV file:")
-    for issuer, sha1_hash, expiration_date in sorted(set(untrusted_ca)):
-        print(f"Name: {issuer}, SHA-1 Hash: {sha1_hash}, Expiration Date: {expiration_date}")
+    print(json.dumps(untrusted_ca, indent=2))
 
-    # Display disabled certificates
+    # Display disabled certificates in JSON format
     print("\nCertificates disabled in the CSV file:")
-    for issuer, sha1_hash, expiration_date in sorted(set(disabled_certificates)):
-        print(f"Name: {issuer}, SHA-1 Hash: {sha1_hash}, Expiration Date: {expiration_date}")
+    print(json.dumps(disabled_certificates, indent=2))
 
 get_cert()
