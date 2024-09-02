@@ -1,4 +1,4 @@
-﻿#https://ccadb.my.salesforce-sites.com/microsoft/IncludedCACertificateReportForMSFT
+#https://ccadb.my.salesforce-sites.com/microsoft/IncludedCACertificateReportForMSFT
 #https://learn.microsoft.com/en-us/security/trusted-root/participants-list
 
 # Function to get certificates
@@ -49,17 +49,13 @@ function Get-CertInfo {
 
     $store.Close()
 
-    # Display untrusted CAs
+    # Display untrusted CAs in JSON format
     Write-Host "Certificates in the system but not present in the CSV file:"
-    $untrustedCA | Sort-Object Issuer | ForEach-Object {
-        Write-Host "Name: $($_.Issuer), SHA-1 Hash: $($_.SHA1Hash), Expiration Date: $($_.ExpirationDate)"
-    }
+    $untrustedCA | Sort-Object Issuer | ConvertTo-Json
 
-    # Display disabled certificates
+    # Display disabled certificates in JSON format
     Write-Host "`nCertificates disabled in the CSV file:"
-    $disabledCertificates | Sort-Object Issuer | ForEach-Object {
-        Write-Host "Name: $($_.Issuer), SHA-1 Hash: $($_.SHA1Hash), Expiration Date: $($_.ExpirationDate)"
-    }
+    $disabledCertificates | Sort-Object Issuer | ConvertTo-Json
 }
 
 # Call the function
