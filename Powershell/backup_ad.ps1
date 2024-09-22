@@ -37,7 +37,7 @@ quit
     if ($LASTEXITCODE -eq 0) {
         Write-Output "Backup IFM créé avec succès dans $ntdsBackupPath"
     } else {
-        Write-Output "Erreur lors de la création du backup IFM. Voir $logPath pour plus de détails."
+        Write-Output "Error during the GPO backup"
     }
 }
 
